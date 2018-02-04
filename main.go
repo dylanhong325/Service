@@ -65,6 +65,7 @@ func handlerSearch(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Fprintf(w, "Search received: %f %f %s", lat, lon, ran)
 
+	// Use hardcode data
 	p := &Post{
 		User:"1111",
 		Message:"一生必去的100个地方",
