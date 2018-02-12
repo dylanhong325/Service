@@ -46,7 +46,7 @@ const (
 	//PROJECT_ID = "around-xxx"
 	//BT_INSTANCE = "around-post"
 	// Needs to update this URL if you deploy it to cloud.
-	ES_URL = "http://35.231.85.66:9200"
+	ES_URL = "http://35.229.98.234:9200"
 )
 
 var mySigningKey = []byte("secret")
