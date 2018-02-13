@@ -135,7 +135,7 @@ func handlerPost(w http.ResponseWriter, r *http.Request) {
 	mut := bigtable.NewMutation()
 	t := bigtable.Now()
 	mut.Set("post", "user", t, []byte(p.User))
-	mut.Set("post", "message", bigtable.Now(), []byte("1"))
+	mut.Set("post", "message", bigtable.Now(), []byte(p.Message))
 	mut.Set("location", "lat", t, []byte(strconv.FormatFloat(p.Location.Lat, 'f', -1, 64)))
 	mut.Set("location", "lon", t, []byte(strconv.FormatFloat(p.Location.Lon, 'f', -1, 64)))
 
