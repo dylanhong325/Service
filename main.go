@@ -13,11 +13,10 @@ import (
 	"cloud.google.com/go/storage"
 	"strings"
 	"io"
-	//"os"
+	"os"
 	"github.com/auth0/go-jwt-middleware"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
-	"os"
 	"github.com/gorilla/handlers"
 )
 type Location struct {
@@ -35,7 +34,7 @@ const (
 	INDEX = "around"
 	TYPE = "post"
 	DISTANCE = "200km"
-	PROJECT_ID = "around-179500"
+	PROJECT_ID = "tensile-nebula-194222"
 	BT_INSTANCE = "around-post"
 	// Needs to update this URL if you deploy it to cloud.
 	ES_URL = "http://35.185.88.140:9200"
@@ -92,9 +91,12 @@ func main() {
 	r.Handle("/signup", http.HandlerFunc(signupHandler)).Methods("POST")
 
 	http.Handle("/", r)
+	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With"})
+	originsOk := handlers.AllowedOrigins([]string{os.Getenv("ORIGIN_ALLOWED")})
+	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
 	// start server listen
 	// with error handling
-	log.Fatal(http.ListenAndServe(":8080", handlers.CORS()(r)))
+	log.Fatal(http.ListenAndServe(":8080", handlers.CORS(headersOk, originsOk, methodsOk)(r)))
 }
 
 func handlerSearch(w http.ResponseWriter, r *http.Request) {
