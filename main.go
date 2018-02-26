@@ -13,7 +13,6 @@ import (
 	"cloud.google.com/go/storage"
 	"strings"
 	"io"
-	"os"
 	"github.com/auth0/go-jwt-middleware"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
@@ -91,12 +90,9 @@ func main() {
 	r.Handle("/signup", http.HandlerFunc(signupHandler)).Methods("POST")
 
 	http.Handle("/", r)
-	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With"})
-	originsOk := handlers.AllowedOrigins([]string{os.Getenv("ORIGIN_ALLOWED")})
-	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
 	// start server listen
 	// with error handling
-	log.Fatal(http.ListenAndServe(":8080", handlers.CORS(headersOk, originsOk, methodsOk)(r)))
+	log.Fatal(http.ListenAndServe(":8080", handlers.CORS()(r)))
 }
 
 func handlerSearch(w http.ResponseWriter, r *http.Request) {
