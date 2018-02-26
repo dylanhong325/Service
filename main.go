@@ -16,6 +16,7 @@ import (
 	"github.com/auth0/go-jwt-middleware"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/handlers"
 )
 type Location struct {
 	Lat float64 `json:"lat"`
@@ -91,7 +92,7 @@ func main() {
 	http.Handle("/", r)
 	// start server listen
 	// with error handling
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":8080", handlers.CORS()(r)))
 }
 
 func handlerSearch(w http.ResponseWriter, r *http.Request) {
