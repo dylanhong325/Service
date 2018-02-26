@@ -16,7 +16,8 @@ import (
 	"github.com/auth0/go-jwt-middleware"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
-	"github.com/gorilla/handlers"
+	// "github.com/gorilla/handlers"
+	"github.com/rs/cors"
 )
 type Location struct {
 	Lat float64 `json:"lat"`
@@ -90,12 +91,22 @@ func main() {
 	r.Handle("/signup", http.HandlerFunc(signupHandler)).Methods("POST")
 
 	http.Handle("/", r)
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{"http://localhost:8000"},
+		AllowCredentials: true,
+	})
+
+	handler := c.Handler(r)
 	// start server listen
 	// with error handling
-	log.Fatal(http.ListenAndServe(":8080", handlers.CORS()(r)))
+	log.Fatal(http.ListenAndServe(":8080", handler))
 }
 
 func handlerSearch(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type,Authorization")
+	
 	fmt.Println("Received one request for search")
 	lat, _ := strconv.ParseFloat(r.URL.Query().Get("lat"), 64)
 	lon, _ := strconv.ParseFloat(r.URL.Query().Get("lon"), 64)
