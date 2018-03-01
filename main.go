@@ -84,8 +84,8 @@ func main() {
 		SigningMethod: jwt.SigningMethodHS256,
 	})
 
-	r.Handle("/post", jwtMiddleware.Handler(http.HandlerFunc(handlerPost))).Methods("POST", "OPTION")
-	r.Handle("/search", jwtMiddleware.Handler(http.HandlerFunc(handlerSearch))).Methods("GET", "OPTION")
+	r.Handle("/post", jwtMiddleware.Handler(http.HandlerFunc(handlerPost))).Methods("POST", "OPTIONS")
+	r.Handle("/search", jwtMiddleware.Handler(http.HandlerFunc(handlerSearch))).Methods("GET", "OPTIONS")
 	r.Handle("/login", http.HandlerFunc(loginHandler)).Methods("POST")
 	r.Handle("/signup", http.HandlerFunc(signupHandler)).Methods("POST")
 
