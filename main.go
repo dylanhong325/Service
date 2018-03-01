@@ -96,6 +96,7 @@ func main() {
 }
 
 func handlerSearch(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type,Authorization")
 	fmt.Println("Received one request for search")
@@ -156,8 +157,6 @@ func handlerSearch(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 		return
 	}
-
-	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
 
@@ -165,55 +164,41 @@ func handlerPost(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type,Authorization")
-
-
-	// 32 << 20 is the maxMemory param for ParseMultipartForm, equals to 32MB (1MB = 1024 * 1024 bytes = 2^20 bytes)
-	// After you call ParseMultipartForm, the file will be saved in the server memory with maxMemory size.
-	// If the file size is larger than maxMemory, the rest of the data will be saved in a system temporary file.
-	r.ParseMultipartForm(32 << 20)
-
-	// Parse from form data.
-	fmt.Printf("Received one post request %s\n", r.FormValue("message"))
-	lat, _ := strconv.ParseFloat(r.FormValue("lat"), 64)
-	lon, _ := strconv.ParseFloat(r.FormValue("lon"), 64)
-	p := &Post{
-		User:    "1111",
-		Message: r.FormValue("message"),
-		Location: Location{
-			Lat: lat,
-			Lon: lon,
-		},
+	// Parse from body of request to get a json object.
+	user := r.Context().Value("user")
+	claims := user.(*jwt.Token).Claims
+	username := claims.(jwt.MapClaims)["username"]
+	fmt.Println("Received one post request")
+	decoder := json.NewDecoder(r.Body)
+	var p Post
+	if err := decoder.Decode(&p); err != nil {
+		panic(err)
+		return
+	}
+	p.User = username.(string)
+	// Create a client
+	es_client, err := elastic.NewClient(elastic.SetURL(ES_URL), elastic.SetSniff(false))
+	if err != nil {
+		panic(err)
+		return
 	}
 
 	id := uuid.New()
 
-	file, _, err := r.FormFile("image")
+	// Save it to index
+	_, err = es_client.Index().
+		Index(INDEX).
+		Type(TYPE).
+		Id(id).
+		BodyJson(p).
+		Refresh(true).
+		Do()
 	if err != nil {
-		http.Error(w, "Image is not available", http.StatusInternalServerError)
-		fmt.Printf("Image is not available %v.\n", err)
-		return
-	}
-	defer file.Close()
-
-	ctx := context.Background()
-
-	// replace it with your real bucket name.
-	_, attrs, err := saveToGCS(ctx, file, BUCKET_NAME, id)
-	if err != nil {
-		http.Error(w, "GCS is not setup", http.StatusInternalServerError)
-		fmt.Printf("GCS is not setup %v\n", err)
+		panic(err)
 		return
 	}
 
-	// Update the media link after saving to GCS.
-	p.Url = attrs.MediaLink
-
-	// Save to ES.
-	saveToES(p, id)
-
-	// Save to BigTable.
-	//saveToBigTable(p, id)
-
+	fmt.Printf("Post is saved to Index: %s\n", p.Message)
 	/*
 	ctx := context.Background()
 	bt_client, err := bigtable.NewClient(ctx, PROJECT_ID, BT_INSTANCE)
@@ -237,7 +222,6 @@ func handlerPost(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Printf("Post is saved to BigTable: %s\n", p.Message)
 	*/
-
 }
 
 func containsFilteredWords(s *string) bool {
